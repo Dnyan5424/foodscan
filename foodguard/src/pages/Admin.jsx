@@ -19,3 +19,7 @@ export default function Admin() {
             <p className="text-sm text-muted leading-relaxed">{item.text}</p>
           </div>
         ))}
+      </div>
+    </div>
+  )
+}

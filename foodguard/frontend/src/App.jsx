@@ -3,7 +3,7 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import { ToastProvider } from './components/Toast'
 import { AuthProvider } from './context/AuthContext'
-
+import React from 'react'
 import Home from './pages/Home'
 import ExpiryTracker from './pages/ExpiryTracker'
 import ProductScanner from './pages/ProductScanner'
