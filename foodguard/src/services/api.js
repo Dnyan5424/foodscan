@@ -43,7 +43,10 @@ export const api = {
   getComplaints: () => request('/complaints'),
   createComplaint: (c) => request('/complaints', { method: 'POST', body: c }),
   getComplaintStats: () => request('/complaints/stats', { auth: false }),
-
+  getGeoRisk: (productName, location) => {
+  const params = new URLSearchParams({ productName, ...(location ? { location } : {}) })
+  return request(`/complaints/risk?${params.toString()}`, { auth: false })
+},
   // guides / awareness
   getGuides: () => request('/guides', { auth: false }),
   getGuide: (slug) => request(`/guides/${slug}`, { auth: false }),
@@ -60,6 +63,12 @@ export const api = {
     form.append('label', file)
     return request('/scan', { method: 'POST', body: form, isForm: true })
   },
+  lookupBarcode: (code) => request(`/scan/barcode/${encodeURIComponent(code)}`, { auth: false }),
+  analyzeIngredients: (ingredientsText) => request('/scan/ingredients/analyze', {
+    method: 'POST',
+    body: { ingredientsText },
+    auth: false,
+  }),
 
   // assistant
   askAssistant: (question) => request('/assistant/ask', { method: 'POST', body: { question }, auth: false }),

@@ -1,6 +1,6 @@
 import Complaint from '../models/Complaint.js'
 import { suggestIssueType } from '../services/complaintClassifier.js'
-
+import { computeGeoRisk } from '../services/geoRiskService.js'
 async function nextTrackingId() {
   const year = new Date().getFullYear()
   const count = await Complaint.countDocuments({ trackingId: new RegExp(`^FS-${year}-`) })
@@ -55,4 +55,17 @@ export async function complaintStats(req, res) {
   const total = await Complaint.countDocuments()
   const resolved = await Complaint.countDocuments({ status: 'resolved' })
   res.json({ total, resolved, active: total - resolved, byCategory })
+}
+// Geo-temporal risk: aggregates complaint activity for a product, and
+// optionally a location, into a simple risk signal. Public + aggregate
+// only — no personal data.
+export async function getGeoRisk(req, res) {
+  try {
+    const { productName, location } = req.query
+    if (!productName) return res.status(400).json({ message: 'productName query parameter is required' })
+    const risk = await computeGeoRisk(productName, location)
+    res.json(risk)
+  } catch (err) {
+    res.status(500).json({ message: 'Risk lookup failed', error: err.message })
+  }
 }
