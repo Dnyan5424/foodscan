@@ -24,6 +24,7 @@ import About from './pages/About'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import NotFound from './pages/NotFound'
+import FDAWatch from './pages/FDAWatch'
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="/expiry-tracker/scan" element={<ProductScanner />} />
             <Route path="/expiry-tracker/scan-barcode" element={<BarcodeScanner />} />
             <Route path="/complaints" element={<Complaints />} />
+            <Route path="/fdawatch" element={<FDAWatch />} />
             <Route path="/adulteration-guide" element={<AdulterationGuide />} />
             <Route path="/adulteration-guide/:slug" element={<AdulterationDetail />} />
             <Route path="/awareness" element={<Awareness />} />
