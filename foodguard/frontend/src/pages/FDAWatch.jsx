@@ -556,10 +556,13 @@ export default function FDAWatch() {
       )
 
   const handleRaidSelect = useCallback((raidId) => {
-    setActiveRaidId(raidId)
+    const normalizedId = String(raidId)
+    setActiveRaidId(normalizedId)
     setActiveClusterIds([])
-    const raid = mapReports.find((item) => String(item.id) === String(raidId))
-    if (raid) setActivePlace(raid.city || raid.district || raid.state || 'Maharashtra')
+    const raid = mapReports.find((item) => String(item.id) === normalizedId)
+    if (raid) {
+      setActivePlace(raid.city || raid.district || raid.state || 'Maharashtra')
+    }
   }, [mapReports])
 
   const handleClusterSelect = useCallback((reportIds) => {
@@ -569,6 +572,12 @@ export default function FDAWatch() {
     const firstReport = mapReports.find((report) => ids.includes(String(report.id)))
     if (firstReport) setActivePlace(firstReport.city || firstReport.district || firstReport.state || 'Maharashtra')
   }, [mapReports])
+
+  const sortedReportList = useMemo(() => [...mapReports].sort((a, b) => {
+    const dateA = new Date(a.published || a.date || '2000-01-01').getTime()
+    const dateB = new Date(b.published || b.date || '2000-01-01').getTime()
+    return dateB - dateA
+  }), [mapReports])
 
 
 
@@ -787,6 +796,31 @@ export default function FDAWatch() {
             {recallLoadError && <p className="mb-3 border-l-2 border-red-700 bg-red-50 px-4 py-3 text-xs text-red-800">The FSSAI recall data could not be loaded, so recall pins are unavailable.</p>}
 
             <ActionMap raids={mapReports} activeRaidId={activeRaidId} activePlace={activePlace} onSelectRaid={handleRaidSelect} onSelectCluster={handleClusterSelect} />
+
+            {mapReports.length > 0 && (
+              <div className="mt-4 border border-black/10 bg-white p-3">
+                <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-muted">Available source reports</p>
+                <div className="max-h-52 space-y-2 overflow-y-auto">
+                  {sortedReportList.slice(0, 12).map((report) => {
+                    const selected = String(report.id) === String(activeRaidId)
+                    return (
+                      <button
+                        key={report.id}
+                        type="button"
+                        onClick={() => handleRaidSelect(report.id)}
+                        className={`w-full border-l-2 px-3 py-2 text-left transition ${selected ? 'border-forest bg-emerald-50' : 'border-transparent bg-slate-50 hover:border-forest/60'} `}
+                      >
+                        <div className={`text-[10px] font-extrabold uppercase ${report.recordType === 'recall' ? 'text-sky-800' : 'text-red-800'}`}>
+                          {report.recordType === 'recall' ? 'FSSAI Recall' : 'FDA Enforcement'}
+                        </div>
+                        <div className="mt-1 text-sm font-semibold text-charcoal">{report.title}</div>
+                        <div className="mt-1 text-[11px] text-muted">{report.location || report.city || report.district || 'India'}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-muted">
 

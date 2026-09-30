@@ -3,12 +3,13 @@ import Product from '../models/Product.js'
 import Notification from '../models/Notification.js'
 import PushSubscription from '../models/PushSubscription.js'
 
-const REMINDER_DAYS = [7, 3, 1, 0]
+const REMINDER_DAYS = [7, 3, 1, 0, -1]
 const REMINDER_TYPE_MAP = {
   7: 'expiry_7',
   3: 'expiry_3',
   1: 'expiry_1',
   0: 'expiry_0',
+  '-1': 'expired_1',
 }
 
 function toLocalStartOfDay(date) {
@@ -36,6 +37,7 @@ export function getReminderLabel(type) {
     expiry_3: '3 days before expiry',
     expiry_1: '1 day before expiry',
     expiry_0: 'expiry day',
+    expired_1: 'expired yesterday',
   }
   return map[type] || 'Expiry reminder'
 }
@@ -155,17 +157,27 @@ export async function createExpiryNotificationsForProduct(product) {
     day: 'numeric',
   })
 
-  const title = daysRemaining === 0
-    ? `${productName} expires today`
-    : `${productName} expires in ${daysRemaining} day${daysRemaining === 1 ? '' : 's'}`
+  const title = daysRemaining === -1
+    ? `${productName} expired yesterday`
+    : daysRemaining === 0
+      ? `${productName} expires today`
+      : daysRemaining === 1
+        ? `${productName} expires tomorrow`
+        : `${productName} expires in ${daysRemaining} days`
 
-  const message = `${productName} expires on ${shortDate}. Please check it soon.`
+  const message = daysRemaining === -1
+    ? `${productName} expired on ${shortDate}. Please review it and remove it from use.`
+    : `${productName} expires on ${shortDate}. Please check it soon.`
 
   const existing = await Notification.findOne({ userId: product.user, foodId: product._id, type })
   if (existing) return existing
 
   const scheduledDate = new Date(product.expiryDate)
-  scheduledDate.setDate(scheduledDate.getDate() - daysRemaining)
+  if (daysRemaining === -1) {
+    scheduledDate.setDate(scheduledDate.getDate() + 1)
+  } else {
+    scheduledDate.setDate(scheduledDate.getDate() - daysRemaining)
+  }
 
   const notification = await Notification.create({
     userId: product.user,

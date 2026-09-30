@@ -33,5 +33,33 @@ Thumbs.db
 backend/uploads/
 backend/.cache/
 
+# ML service
+ml_service/dataset/**
+!ml_service/dataset/
+!ml_service/dataset/README.md
+!ml_service/dataset/.gitkeep
+!ml_service/dataset/turmeric/
+!ml_service/dataset/turmeric/.gitkeep
+!ml_service/dataset/turmeric/normal/
+!ml_service/dataset/turmeric/normal/.gitkeep
+!ml_service/dataset/turmeric/abnormal/
+!ml_service/dataset/turmeric/abnormal/.gitkeep
+!ml_service/dataset/chilli/
+!ml_service/dataset/chilli/.gitkeep
+!ml_service/dataset/flour/
+!ml_service/dataset/flour/.gitkeep
+!ml_service/dataset/pulses/
+!ml_service/dataset/pulses/.gitkeep
+!ml_service/dataset/salt/
+!ml_service/dataset/salt/.gitkeep
+!ml_service/dataset/milk/
+!ml_service/dataset/milk/.gitkeep
+ml_service/models/**
+!ml_service/models/
+!ml_service/models/.gitkeep
+__pycache__/
+*.pyc
+.venv/
+
 # Misc
 coverage/

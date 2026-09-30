@@ -5,7 +5,7 @@ const notificationSchema = new mongoose.Schema({
   foodId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', default: null, index: true },
   type: {
     type: String,
-    enum: ['expiry_7', 'expiry_3', 'expiry_1', 'expiry_0'],
+    enum: ['expiry_7', 'expiry_3', 'expiry_1', 'expiry_0', 'expired_1'],
     required: true,
   },
   title: { type: String, required: true },
