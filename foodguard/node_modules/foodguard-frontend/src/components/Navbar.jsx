@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { NavLink, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import NotificationBell from './NotificationBell'
 
 const LINKS = [
   { to: '/', label: 'Home' },
@@ -64,14 +65,23 @@ export default function Navbar() {
             AI Assistant
           </Link>
           {user && (
-            <Link to="/profile" className="whitespace-nowrap px-2.5 py-2 rounded-pill text-xs font-medium text-white/80 hover:text-white hover:bg-white/10">
-              Dashboard
-            </Link>
+            <>
+              <NotificationBell user={user} />
+              <Link to="/profile" className="whitespace-nowrap px-2.5 py-2 rounded-pill text-xs font-medium text-white/80 hover:text-white hover:bg-white/10">
+                Dashboard
+              </Link>
+            </>
           )}
           <button onClick={handleAuthClick} className="whitespace-nowrap px-3 py-2 rounded-pill text-xs font-semibold bg-orange text-white hover:bg-orange-gold transition-colors">
             {user ? `Log out (${user.name.split(' ')[0]})` : 'Log in'}
           </button>
         </div>
+
+        {user && (
+          <div className="lg:hidden">
+            <NotificationBell user={user} />
+          </div>
+        )}
 
         <button
           className="lg:hidden p-2"

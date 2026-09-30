@@ -10,6 +10,8 @@ import awarenessRoutes from './src/routes/awarenessRoutes.js'
 import quizRoutes from './src/routes/quizRoutes.js'
 import scanRoutes from './src/routes/scanRoutes.js'
 import assistantRoutes from './src/routes/assistantRoutes.js'
+import notificationRoutes from './src/routes/notificationRoutes.js'
+import { startExpiryNotificationJob } from './jobs/expiryNotificationJob.js'
 
 const app = express()
 
@@ -26,6 +28,7 @@ app.use('/api/awareness', awarenessRoutes)
 app.use('/api/quiz', quizRoutes)
 app.use('/api/scan', scanRoutes)
 app.use('/api/assistant', assistantRoutes)
+app.use('/api/notifications', notificationRoutes)
 
 app.use((req, res) => res.status(404).json({ message: 'Route not found' }))
 app.use((err, req, res, next) => {
@@ -36,5 +39,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000
 
 connectDB().then(() => {
+  startExpiryNotificationJob()
   app.listen(PORT, () => console.log(`FoodGuard API running on port ${PORT}`))
 })

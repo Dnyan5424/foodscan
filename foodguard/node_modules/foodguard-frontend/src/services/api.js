@@ -70,6 +70,16 @@ export const api = {
     auth: false,
   }),
 
+  // notifications
+  getNotifications: () => request('/notifications'),
+  getUnreadCount: () => request('/notifications/unread-count'),
+  markNotificationRead: (id) => request(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllNotificationsRead: () => request('/notifications/read-all', { method: 'PATCH' }),
+  subscribeToPush: (subscription) => request('/notifications/subscribe', {
+    method: 'POST',
+    body: { subscription },
+  }),
+
   // assistant
   askAssistant: (question) => request('/assistant/ask', { method: 'POST', body: { question }, auth: false }),
 }
