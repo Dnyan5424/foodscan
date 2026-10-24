@@ -12,6 +12,8 @@ const complaintSchema = new mongoose.Schema({
   },
   suggestedIssueType: { type: String, default: '' }, // filled by the keyword classifier for comparison
   location: { type: String, default: '' },
+  latitude: { type: Number, min: -90, max: 90 },
+  longitude: { type: Number, min: -180, max: 180 },
   incidentDate: { type: Date },
   description: { type: String, default: '' },
   evidenceUrl: { type: String, default: '' },

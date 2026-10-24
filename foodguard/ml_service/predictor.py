@@ -3,12 +3,15 @@ from __future__ import annotations
 import json
 from io import BytesIO
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-import numpy as np
-import tensorflow as tf
 from PIL import Image, UnidentifiedImageError
 
 from food_registry import FOODS, get_food, get_model_artifact_paths, is_model_ready
+
+if TYPE_CHECKING:
+    import numpy as np
+    import tensorflow as tf
 
 
 def load_class_names(food: str) -> list[str]:
@@ -28,6 +31,8 @@ def load_class_names(food: str) -> list[str]:
 
 
 def load_model(food: str) -> tf.keras.Model:
+    import tensorflow as tf
+
     food_id = get_food(food)
     model_path, _ = get_model_artifact_paths(food_id)
     if not model_path.exists():
@@ -36,6 +41,9 @@ def load_model(food: str) -> tf.keras.Model:
 
 
 def _prepare_image(image: Image.Image) -> np.ndarray:
+    import numpy as np
+    import tensorflow as tf
+
     rgb = image.convert('RGB').resize((224, 224))
     arr = np.asarray(rgb, dtype=np.float32)
     arr = tf.keras.applications.mobilenet_v3.preprocess_input(arr)
@@ -43,6 +51,8 @@ def _prepare_image(image: Image.Image) -> np.ndarray:
 
 
 def predict_food_from_bytes(food: str, image_bytes: bytes) -> dict:
+    import numpy as np
+
     food_id = get_food(food)
     if not image_bytes:
         raise ValueError('Image is empty.')

@@ -349,8 +349,10 @@ export default function FDAWatch() {
   const [preferences, setPreferences] = useState(readPreferences)
 
   const [recalls, setRecalls] = useState([])
+  const [newsReports, setNewsReports] = useState([])
 
   const [recallLoadError, setRecallLoadError] = useState(false)
+  const [newsLoadError, setNewsLoadError] = useState(false)
 
   const [activePlace, setActivePlace] = useState('Maharashtra')
 
@@ -404,6 +406,54 @@ export default function FDAWatch() {
 
     return () => { cancelled = true }
 
+  }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    fetch('/data/foodguard_india_food_safety_news.csv')
+      .then((response) => {
+        if (!response.ok) throw new Error('News data unavailable')
+        return response.text()
+      })
+      .then((csv) => {
+        const parsed = Papa.parse(csv, {
+          header: true,
+          skipEmptyLines: 'greedy',
+          transformHeader: (header) => header.trim(),
+        })
+        if (parsed.errors.length) throw new Error('Could not parse news data')
+
+        const reports = parsed.data
+          .filter((report) => report.id && report.title)
+          .map((report) => {
+            const latitudeValue = report.latitude?.trim()
+            const longitudeValue = report.longitude?.trim()
+            const latitude = Number(latitudeValue)
+            const longitude = Number(longitudeValue)
+            const hasCoordinates = Boolean(latitudeValue && longitudeValue)
+              && Number.isFinite(latitude) && latitude >= -90 && latitude <= 90
+              && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180
+
+            return {
+              ...report,
+              published: report.date,
+              source: report.source || report.authority,
+              url: report.source_url,
+              location: [report.city, report.district, report.state].filter(Boolean).join(', ') || 'India',
+              recordType: 'enforcement',
+              coordinates: hasCoordinates ? [longitude, latitude] : undefined,
+              locationPrecision: report.location_accuracy || (hasCoordinates ? 'Source-provided coordinates' : 'Location coordinates not provided'),
+            }
+          })
+
+        if (!cancelled) setNewsReports(reports)
+      })
+      .catch(() => {
+        if (!cancelled) setNewsLoadError(true)
+      })
+
+    return () => { cancelled = true }
   }, [])
 
 
@@ -470,7 +520,7 @@ export default function FDAWatch() {
 
   }), [recalls])
 
-  const mapReports = useMemo(() => [...VERIFIED_RAIDS, ...mappedRecalls], [mappedRecalls])
+  const mapReports = useMemo(() => [...VERIFIED_RAIDS, ...newsReports, ...mappedRecalls], [newsReports, mappedRecalls])
 
 
 
@@ -536,7 +586,7 @@ export default function FDAWatch() {
 
 
 
-  const placeCounts = ['Pune', 'Pimpri-Chinchwad', 'Mumbai', 'Nashik', 'Maharashtra'].map((place) => ({
+  const placeCounts = ['Pimpri-Chinchwad', 'Mumbai', 'Maharashtra'].map((place) => ({
 
     place,
 
@@ -583,17 +633,17 @@ export default function FDAWatch() {
 
   return (
 
-    <div className="min-h-screen bg-[#f6f7f4] text-charcoal">
+    <div className="min-h-screen bg-[#f2f5ef] text-charcoal">
 
-      <main className="mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-12">
+      <main className="mx-auto max-w-[1480px] px-4 pb-16 pt-5 sm:px-6 sm:pt-8 lg:px-8">
 
-        <section className="border-b-2 border-charcoal pb-7">
+        <section className="relative overflow-hidden rounded-2xl bg-[radial-gradient(ellipse_at_100%_0%,rgba(255,255,255,0.14),transparent_42%),linear-gradient(125deg,#163e32_0%,#205b45_58%,#14372e_100%)] px-5 py-6 text-white shadow-lg sm:px-8 sm:py-9 lg:px-11 lg:py-10">
 
           <div className="flex flex-wrap items-center justify-between gap-4">
 
-            <div className="inline-flex items-center gap-2 text-xs font-extrabold tracking-[0.14em] text-forest-deep">
+            <div className="inline-flex items-center gap-2 text-xs font-extrabold tracking-[0.14em] text-white/85">
 
-              <ShieldCheck size={18} /> FOODGUARD FDA WATCH
+              <ShieldCheck size={18} className="text-[#f4b269]" /> FOODGUARD FDA WATCH
 
             </div>
 
@@ -605,7 +655,7 @@ export default function FDAWatch() {
 
               aria-expanded={showPreferences}
 
-              className="inline-flex items-center gap-2 rounded-full border border-charcoal/15 bg-white px-4 py-2.5 text-sm font-semibold hover:border-forest"
+              className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/20"
 
             >
 
@@ -615,15 +665,15 @@ export default function FDAWatch() {
 
           </div>
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_250px] lg:items-end">
+          <div className="mt-8 grid gap-7 lg:grid-cols-[minmax(0,1fr)_390px] lg:items-end">
 
             <div>
 
-              <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.16em] text-orange">Daily intelligence · Maharashtra</p>
+              <p className="mb-3 text-xs font-extrabold uppercase tracking-[0.16em] text-[#f4b269]">Daily intelligence · Maharashtra</p>
 
-              <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.08] sm:text-5xl">Food safety, <span className="text-forest-deep">reported with proof.</span></h1>
+              <h1 className="max-w-3xl text-4xl font-extrabold leading-[1.08] sm:text-5xl lg:text-[3.5rem]">Food safety,<br className="hidden sm:block" /> <span className="text-[#b9dfbd]">reported with proof.</span></h1>
 
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-muted">Official notices and source-linked food-safety information. This curated reference snapshot is not a live news feed; each item links to its original publisher.</p>
+              <p className="mt-4 max-w-2xl text-sm leading-6 text-white/70">Official notices and source-linked food-safety information. This curated reference snapshot is not a live news feed; each item links to its original publisher.</p>
 
             </div>
 
@@ -639,9 +689,9 @@ export default function FDAWatch() {
 
               <div className="bg-white p-4">
 
-                <span className="block text-2xl font-extrabold">{VERIFIED_RAIDS.length}</span>
+                <span className="block text-2xl font-extrabold">{newsReports.length}</span>
 
-                <span className="mt-1 block text-[10px] font-bold uppercase tracking-wide text-muted">Verified raids</span>
+                <span className="mt-1 block text-[10px] font-bold uppercase tracking-wide text-muted">Enforcement reports</span>
 
               </div>
 
@@ -657,11 +707,12 @@ export default function FDAWatch() {
 
           </div>
 
-          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-black/10 pt-4 text-xs text-muted">
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/20 pt-4 text-xs text-white/65">
 
             <span className="inline-flex items-center gap-1.5"><CalendarDays size={14} /> Reviewed 25 Sep 2026</span>
 
             <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} /> Official sources prioritized</span>
+            <a href="#action-map" className="font-bold text-[#f4b269] underline-offset-4 hover:underline">Explore the action map ↓</a>
 
             <span className="inline-flex items-center gap-1.5">{visibleUpdates.length} matching source-linked updates</span>
 
@@ -673,7 +724,7 @@ export default function FDAWatch() {
 
         {showPreferences && (
 
-          <section className="grid gap-8 border-b border-black/10 bg-white px-5 py-6 sm:grid-cols-3 sm:px-7" aria-label="Alert preferences">
+          <section className="mt-5 grid gap-7 rounded-2xl border border-black/10 bg-white px-5 py-6 shadow-sm sm:grid-cols-3 sm:px-7" aria-label="Alert preferences">
 
             <div>
 
@@ -719,11 +770,11 @@ export default function FDAWatch() {
 
 
 
-        <section className="grid gap-8 border-b border-black/10 py-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <section className="mt-10 grid gap-7 rounded-2xl border border-black/10 bg-white p-5 shadow-sm sm:p-7 lg:grid-cols-[minmax(0,1fr)_280px]">
 
           <div>
 
-            <div className="mb-1 flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide">
+            <div className="mb-1 flex items-center gap-2 text-xs font-extrabold uppercase tracking-[0.12em] text-forest-deep">
 
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-600" /> Verified source updates
 
@@ -749,7 +800,7 @@ export default function FDAWatch() {
 
 
 
-          <aside className="h-fit border-l-0 border-charcoal/15 pl-0 lg:border-l lg:pl-6">
+          <aside className="h-fit rounded-xl bg-[#f2f5ef] p-5 lg:sticky lg:top-6">
 
             <h2 className="text-sm font-extrabold">Source confidence</h2>
 
@@ -773,7 +824,7 @@ export default function FDAWatch() {
 
 
 
-        <section className="grid gap-8 border-b border-black/10 py-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <section className="scroll-mt-6 mt-6 grid gap-7 rounded-2xl border border-black/10 bg-white p-4 shadow-md sm:p-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:p-7">
 
           <div>
 
@@ -781,24 +832,29 @@ export default function FDAWatch() {
 
               <div>
 
-                <p className="text-xs font-extrabold uppercase tracking-wide text-orange">Verified events only</p>
+                <p className="text-xs font-extrabold uppercase tracking-wide text-orange">Source-linked reports</p>
 
-                <h2 className="mt-1 text-2xl font-extrabold">FDA Action Map</h2>
+                <h2 id="action-map" className="mt-1 text-2xl font-extrabold sm:text-3xl">FDA Action Map</h2>
 
               </div>
 
-              <a href="https://openfreemap.org/" target="_blank" rel="noreferrer" className="text-xs font-semibold text-forest-deep hover:underline">Map data & provider ↗</a>
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                <span className="inline-flex items-center gap-1.5 font-semibold text-charcoal/75"><span className="h-2.5 w-2.5 rounded-full bg-[#1676a3]" /> FSSAI recalls</span>
+                <span className="inline-flex items-center gap-1.5 font-semibold text-charcoal/75"><span className="h-2.5 w-2.5 rounded-full bg-[#bd3434]" /> Enforcement</span>
+                <a href="https://openfreemap.org/" target="_blank" rel="noreferrer" className="font-semibold text-forest-deep hover:underline">Map provider ↗</a>
+              </div>
 
             </div>
 
-            <p className="mb-4 mt-2 max-w-2xl text-sm leading-6 text-muted">Blue pins are FSSAI recall records; red pins are enforcement reports. Recall pins show district/city-level locations, not exact business addresses. State and central-office-only coordinates are excluded. Mapped recalls: {mappedRecalls.length} of {recalls.length}.</p>
+            <p className="mb-4 mt-2 max-w-3xl text-sm leading-6 text-muted">Blue pins are FSSAI recall records; red pins are enforcement reports. Recall pins show district/city-level locations, not exact business addresses. State and central-office-only coordinates are excluded. Reports without supplied coordinates remain in the list and are not pinned. Mapped recalls: {mappedRecalls.length} of {recalls.length}.</p>
 
             {recallLoadError && <p className="mb-3 border-l-2 border-red-700 bg-red-50 px-4 py-3 text-xs text-red-800">The FSSAI recall data could not be loaded, so recall pins are unavailable.</p>}
+            {newsLoadError && <p className="mb-3 border-l-2 border-red-700 bg-red-50 px-4 py-3 text-xs text-red-800">The food-safety news reports could not be loaded.</p>}
 
             <ActionMap raids={mapReports} activeRaidId={activeRaidId} activePlace={activePlace} onSelectRaid={handleRaidSelect} onSelectCluster={handleClusterSelect} />
 
             {mapReports.length > 0 && (
-              <div className="mt-4 border border-black/10 bg-white p-3">
+              <div className="mt-4 rounded-xl bg-[#f2f5ef] p-3">
                 <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.12em] text-muted">Available source reports</p>
                 <div className="max-h-52 space-y-2 overflow-y-auto">
                   {sortedReportList.slice(0, 12).map((report) => {
@@ -832,7 +888,7 @@ export default function FDAWatch() {
 
             </div>
 
-            <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="mt-5 grid grid-cols-2 gap-2 lg:grid-cols-3 2xl:grid-cols-5">
 
               {placeCounts.map(({ place, count }) => (
 
@@ -843,7 +899,7 @@ export default function FDAWatch() {
                   type="button"
 
                   onClick={() => { setActivePlace(place); setActiveRaidId(null); setActiveClusterIds([]) }}
-                  className={`min-h-20 border px-3 py-3 text-left transition-colors ${activePlace === place ? 'border-forest bg-emerald-50' : 'border-black/10 bg-white hover:border-charcoal/40'}`}
+                  className={`min-h-16 rounded-xl border px-3 py-3 text-left transition-colors ${activePlace === place ? 'border-forest bg-emerald-50' : 'border-black/10 bg-white hover:border-charcoal/40'}`}
 
                 >
 
@@ -863,9 +919,15 @@ export default function FDAWatch() {
 
           </div>
 
-          <aside className="border-t border-black/10 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+          <aside aria-live="polite" className="border-t border-black/10 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
 
-            <h3 className="text-sm font-extrabold">{activePlace} reports</h3>
+            <h3 className="text-sm font-extrabold">
+              {activeClusterIds.length
+                ? `${activeClusterIds.length} selected reports`
+                : activeRaidId
+                  ? 'Selected report'
+                  : `${activePlace} reports`}
+            </h3>
 
             {selectedEnforcement.length ? (
 
@@ -886,6 +948,7 @@ export default function FDAWatch() {
                     <p className="font-semibold">{raid.title}</p>
 
                     <p className="mt-1 text-muted">{formatDate(raid.published)} · {raid.category} · {raid.source}</p>
+                    {!raid.coordinates && <p className="mt-1 text-[11px] text-muted">Source coordinates were not provided; this report is not pinned.</p>}
 
                     {raid.recordType === 'recall' && <p className="mt-1 text-muted">Status: {raid.status || 'Not listed'} · Batch: {raid.batch_lot || 'Not listed'}</p>}
 
@@ -899,7 +962,7 @@ export default function FDAWatch() {
 
             ) : (
 
-              <div className="mt-4 border border-black/10 bg-white p-4">
+              <div className="mt-4 rounded-xl border border-black/10 bg-white p-4">
 
                 <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-muted"><ShieldCheck size={14} /> NO MAPPED REPORTS</span>
 
@@ -941,7 +1004,7 @@ export default function FDAWatch() {
 
           </div>
 
-          <aside className="h-fit border-t border-black/10 pt-5 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+          <aside className="h-fit rounded-xl border border-orange/20 bg-orange/5 p-5">
 
             <div className="flex items-center gap-2 text-sm font-extrabold"><BellRing size={17} /> Alert delivery</div>
 
@@ -1283,7 +1346,7 @@ function ActionMap({ raids, activeRaidId, activePlace, onSelectRaid, onSelectClu
 
   return (
 
-    <div className="relative h-[360px] overflow-hidden border border-black/10 bg-[#e8ece6] sm:h-[440px]">
+    <div className="relative h-[420px] overflow-hidden rounded-xl border border-black/10 bg-[#e8ece6] sm:h-[560px]">
 
       <div ref={containerRef} className="h-full w-full" aria-label="Interactive map of source-verified FDA recalls and enforcement reports across India" />
 
@@ -1297,7 +1360,7 @@ function ActionMap({ raids, activeRaidId, activePlace, onSelectRaid, onSelectClu
 
       )}
 
-      <div className="absolute left-3 top-3 flex items-center gap-2 border border-black/10 bg-white/95 px-3 py-2 text-[11px] font-bold shadow-sm">
+      <div className="absolute left-3 top-3 flex items-center gap-2 rounded-full border border-black/10 bg-white/95 px-3 py-2 text-[11px] font-bold shadow-md backdrop-blur">
 
         <span className={`h-2 w-2 rounded-full ${mapError ? 'bg-red-600' : mapReady ? 'bg-emerald-600' : 'bg-amber-500'}`} />
 

@@ -15,23 +15,33 @@ foodguard/
 
 ## Quick start
 
-You need two terminals — one for the API, one for the frontend.
+Install dependencies from the project root (`foodguard/`):
 
-**1. Backend**
-```bash
-cd backend
-npm install
-cp .env.example .env      # then fill in MONGO_URI and JWT_SECRET
-npm run seed               # loads guides/myths/awareness/quiz content into Mongo
-npm run dev                 # starts the API on http://localhost:5000
-```
-
-**2. Frontend**
 ```bash
 npm install
-cp .env.example .env       # VITE_API_URL defaults to http://localhost:5000/api
-npm run dev                  # starts the app on http://localhost:5173
+python -m pip install -r ml_service/requirements.txt
 ```
+
+Create `backend/.env` from `backend/.env.example` and set `MONGO_URI` and
+`JWT_SECRET`. Start the frontend and backend together from the project root:
+
+```bash
+npm run dev
+```
+
+The app runs at http://localhost:5173 and the backend at http://localhost:5000.
+
+The ML API is a separate Python service. Install its dependencies with
+`python -m pip install -r ml_service/requirements.txt`, then start it in a
+separate terminal from the project root:
+
+```bash
+npm run ml:dev
+```
+
+The ML API runs at http://localhost:8000. Start it only when you need AI
+screening; its TensorFlow runtime may require approval under your Windows
+Application Control policy.
 
 If the backend isn't running or you haven't logged in, the Expiry Tracker,
 Complaints, and AI Assistant pages fall back to a local, in-browser demo mode

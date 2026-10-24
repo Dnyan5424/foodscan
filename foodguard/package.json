@@ -1,3 +1,4 @@
+
 {
   "name": "foodguard",
   "private": true,
@@ -7,7 +8,8 @@
     "frontend"
   ],
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"npm run ml:dev\"",
+    "ml:dev": ".\\ml_service\\.venv\\Scripts\\python.exe -m uvicorn main:app --app-dir ml_service --reload --port 8000",
     "build": "npm run build --prefix frontend",
     "preview": "npm run preview --prefix frontend",
     "seed": "npm run seed --prefix backend"

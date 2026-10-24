@@ -505,6 +505,7 @@ function ComplaintCard({ complaint: c }) {
     c.incidentDate ||
     ''
   ).slice(0, 10)
+  const hasCoordinates = c.latitude != null && c.longitude != null
 
   return (
     <article className="bg-white rounded-[24px] shadow-soft border border-black/5 p-6 sm:p-7 hover:shadow-lift transition-shadow">
@@ -555,6 +556,9 @@ function ComplaintCard({ complaint: c }) {
           icon="📍"
           label="Location"
           value={c.location || 'Not specified'}
+          href={hasCoordinates
+            ? `https://maps.google.com/?q=${c.latitude},${c.longitude}`
+            : undefined}
         />
 
         <Detail
@@ -608,6 +612,7 @@ function Detail({
   icon,
   label,
   value,
+  href,
 }) {
   return (
     <div className="rounded-2xl border border-black/5 bg-black/[0.02] p-4">
@@ -623,6 +628,16 @@ function Detail({
       <p className="text-sm font-semibold mt-1 break-words">
         {value}
       </p>
+      {href && (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-1 text-xs font-semibold text-forest hover:underline"
+        >
+          View attached location
+        </a>
+      )}
 
     </div>
   )
@@ -642,12 +657,53 @@ function ComplaintForm({
     category: '',
     issueType: ISSUE_TYPES[0],
     location: '',
+    latitude: null,
+    longitude: null,
     incidentDate: '',
     description: '',
     evidenceUrl: '',
   })
 
   const [submitting, setSubmitting] = useState(false)
+  const [locationLoading, setLocationLoading] = useState(false)
+  const [locationError, setLocationError] = useState('')
+
+  function attachLiveLocation() {
+    if (!navigator.geolocation) {
+      setLocationError('Live location is not supported by this browser.')
+      return
+    }
+
+    setLocationLoading(true)
+    setLocationError('')
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        setForm((current) => ({
+          ...current,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        }))
+        setLocationLoading(false)
+      },
+      (error) => {
+        setLocationError(error.code === error.PERMISSION_DENIED
+          ? 'Location permission was denied. You can still enter an area manually.'
+          : 'Could not get your location. Please try again or enter an area manually.')
+        setLocationLoading(false)
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    )
+  }
+
+  function removeLiveLocation() {
+    setForm((current) => ({
+      ...current,
+      latitude: null,
+      longitude: null,
+    }))
+    setLocationError('')
+  }
 
   function updateField(field, value) {
     setForm((current) => ({
@@ -753,6 +809,45 @@ function ComplaintForm({
               }
             />
 
+          </div>
+
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={attachLiveLocation}
+                disabled={locationLoading || submitting}
+                className="rounded-pill border border-forest/20 px-4 py-2 text-xs font-semibold text-forest hover:bg-sage/60 transition-colors disabled:opacity-50"
+              >
+                {locationLoading
+                  ? 'Getting location...'
+                  : form.latitude != null
+                    ? 'Refresh live location'
+                    : 'Attach live location'}
+              </button>
+              {form.latitude != null && form.longitude != null && (
+                <>
+                  <span className="text-xs text-success">
+                    Location attached ({form.latitude.toFixed(5)}, {form.longitude.toFixed(5)})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={removeLiveLocation}
+                    className="text-xs font-semibold text-muted hover:text-charcoal"
+                  >
+                    Remove
+                  </button>
+                </>
+              )}
+            </div>
+            <p className="mt-1.5 text-[11px] text-muted">
+              Optional. Your precise location is saved with this complaint only if you attach it.
+            </p>
+            {locationError && (
+              <p role="alert" className="mt-1.5 text-xs text-danger">
+                {locationError}
+              </p>
+            )}
           </div>
 
 

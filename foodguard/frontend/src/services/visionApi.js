@@ -1,4 +1,4 @@
-const baseUrl = (import.meta.env.VITE_ML_API_URL || 'http://localhost:8000').replace(/\/$/, '')
+const baseUrl = (import.meta.env.VITE_ML_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
 
 export async function getFoodModelReadiness() {
   const response = await fetch(`${baseUrl}/foods`)
