@@ -1,0 +1,13 @@
+dataset/
+train.py
+prepare_dataset.py
+README.md
+__pycache__/
+*.pyc
+.venv/
+.git/
+.gitignore
+Dockerfile
+*.keras
+models/*/
+!models.zip

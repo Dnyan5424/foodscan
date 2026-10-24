@@ -21,11 +21,6 @@ import { analyzeFood, getFoodModelReadiness } from '../services/visionApi'
 
 const FOOD_OPTIONS = [
   { value: 'turmeric', label: 'Turmeric Powder' },
-  { value: 'chilli', label: 'Red Chilli Powder' },
-  { value: 'flour', label: 'Wheat Flour' },
-  { value: 'pulses', label: 'Pulses' },
-  { value: 'salt', label: 'Salt' },
-  { value: 'milk', label: 'Milk' },
 ]
 
 const LOW_CONFIDENCE_THRESHOLD = 0.5

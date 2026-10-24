@@ -130,4 +130,10 @@ def predict_turmeric_from_path(image_path: str | Path) -> dict:
 
 
 def list_food_models() -> list[dict]:
-    return [{"id": "turmeric", "label": "Turmeric", "ready": True}]
+    from food_registry import is_model_ready
+
+    return [{
+        "id": "turmeric",
+        "label": "Turmeric",
+        "ready": is_model_ready("turmeric"),
+    }]

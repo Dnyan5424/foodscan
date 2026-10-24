@@ -127,11 +127,9 @@ Invoke-RestMethod http://localhost:8000/
 Invoke-RestMethod http://localhost:8000/foods
 ```
 
-The `/foods` response includes `ready: true` only if that food has both its
-model file and class-name file. The repository includes a ready turmeric model;
-the other foods may report `ready: false` until you train them. The API can
-start even if some or all model files are missing, but predictions for a
-missing model will return an error.
+The `/foods` response includes turmeric only, with `ready: true` only when both
+the model file and class-name file exist. The API can start when the model is
+missing, but predictions then return an error.
 
 ## Use it from the web app
 
@@ -168,13 +166,14 @@ The response includes the predicted class, confidence, and `is_anomaly` flag.
 This is a visual screening result, not a laboratory test or confirmation that
 food is safe.
 
-## Train a model for another food
+## Train or replace the turmeric model
 
 Training is optional. It is not required to start the API or use a food that
 already has model files.
 
-Supported food IDs are `turmeric`, `chilli`, `flour`, `pulses`, `salt`, and
-`milk`. For each food to train:
+The production service currently supports only `turmeric`. Preserve the
+training scripts and dataset folders for future experiments, but do not enable
+another food in production until its model and UI flow have been verified.
 
 1. Organize verified, correctly labeled images into one folder per class under
    `ml_service\dataset\<food-id>\`. For example:
@@ -182,10 +181,10 @@ Supported food IDs are `turmeric`, `chilli`, `flour`, `pulses`, `salt`, and
    ```text
    ml_service/
      dataset/
-       chilli/
-         normal/
+       turmeric/
+         0/
            image-001.jpg
-         adulterated/
+         10/
            image-002.jpg
    ```
 
@@ -200,14 +199,13 @@ Supported food IDs are `turmeric`, `chilli`, `flour`, `pulses`, `salt`, and
    trustworthy labels is strongly recommended. Dataset images are excluded
    from Git; keep a separate backup of your data.
 
-3. From the project root, train the chosen food. For example:
+3. From the project root, train turmeric:
 
    ```powershell
-   .\ml_service\.venv\Scripts\python.exe ml_service\train.py --food chilli
+   .\ml_service\.venv\Scripts\python.exe ml_service\train.py --food turmeric
    ```
 
-   Replace `chilli` with one of the supported food IDs. If `--food` is
-   omitted, the trainer defaults to `turmeric`.
+   The `--food` option defaults to `turmeric`.
 
 4. Training creates or updates these files:
 
